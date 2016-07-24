@@ -1,2 +1,2 @@
 # myhtml-pp
-C++ wrapper for myhtml library (https://github.com/lexborisov/myhtml)
+C++/Qt wrapper for myhtml library (https://github.com/lexborisov/myhtml)
