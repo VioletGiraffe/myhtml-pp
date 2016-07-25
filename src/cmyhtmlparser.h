@@ -7,6 +7,7 @@ DISABLE_COMPILER_WARNINGS
 #include <QString>
 RESTORE_COMPILER_WARNINGS
 
+#include <algorithm>
 #include <vector>
 
 class CMyHtmlParser
@@ -18,6 +19,14 @@ public:
 	};
 
 	struct HtmlTag {
+		inline QString attributeValue(const QString& attributeName) const {
+			const auto it = std::find_if(attributes.cbegin(), attributes.cend(), [&attributeName](const HtmlTagAttribute& attr) {
+				return attr.name == attributeName;
+			});
+
+			return it != attributes.cend() ? it->value : QString();
+		}
+
 		myhtml_tag_id_t type = MyHTML_TAG__UNDEF;
 		QString text;
 		std::vector<HtmlTagAttribute> attributes;
@@ -28,7 +37,7 @@ public:
 	explicit CMyHtmlParser(size_t workerThreadCount = 0);
 	~CMyHtmlParser();
 
-	void parse(const QByteArray& html);
+	const std::vector<HtmlTag>& parse(const QByteArray& html);
 	inline const std::vector<HtmlTag>& result() const {
 		return _tags;
 	}

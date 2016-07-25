@@ -17,7 +17,7 @@ CMyHtmlParser::~CMyHtmlParser()
 		myhtml_destroy(_myhtmlInstance);
 }
 
-void CMyHtmlParser::parse(const QByteArray& html)
+const std::vector<CMyHtmlParser::HtmlTag>& CMyHtmlParser::parse(const QByteArray& html)
 {
 	_tags.clear();
 
@@ -28,6 +28,8 @@ void CMyHtmlParser::parse(const QByteArray& html)
 	myhtml_parse(_tree, MyHTML_ENCODING_UTF_8, html.data(), html.size());
 
 	myhtml_tree_destroy(_tree);
+
+	return _tags;
 }
 
 void CMyHtmlParser::callbackNodeInserted(myhtml_tree_t* /*tree*/, myhtml_tree_node_t* node)
