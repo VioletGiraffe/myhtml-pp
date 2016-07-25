@@ -2,6 +2,8 @@ TEMPLATE = lib
 TARGET   = myhtmlpp
 CONFIG += staticlib c++14
 
+QT = core
+
 mac* | linux*{
 	CONFIG(release, debug|release):CONFIG += Release
 	CONFIG(debug, debug|release):CONFIG += Debug
@@ -15,11 +17,6 @@ OBJECTS_DIR = ../build/$${OUTPUT_DIR}/$${TARGET}
 MOC_DIR     = ../build/$${OUTPUT_DIR}/$${TARGET}
 UI_DIR      = ../build/$${OUTPUT_DIR}/$${TARGET}
 RCC_DIR     = ../build/$${OUTPUT_DIR}/$${TARGET}
-
-QT = core
-
-#check Qt version
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 win*{
 	QMAKE_CXXFLAGS += /MP /wd4251
