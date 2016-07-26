@@ -43,15 +43,17 @@ void CMyHtmlParser::callbackNodeInserted(myhtml_tree_t* /*tree*/, myhtml_tree_no
 	
 	for (myhtml_tree_attr_t *attr = myhtml_node_attribute_first(node); attr != nullptr; attr = myhtml_attribute_next(attr))
 	{
-		const char *name = myhtml_attribute_key(attr, nullptr);
-		assert(name);
-
 		HtmlTagAttribute attribute;
-		attribute.name = QString::fromUtf8(name);
+
+		const char *name = myhtml_attribute_key(attr, nullptr);
+		if (name)
+			attribute.name = QString::fromUtf8(name);
+
 		const char *value = myhtml_attribute_value(attr, nullptr);
 		if (value)
 			attribute.value = QString::fromUtf8(value);
 
+		assert(name || value);
 		tag.attributes.push_back(attribute);
 	}
 
