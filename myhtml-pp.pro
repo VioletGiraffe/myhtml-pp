@@ -33,9 +33,6 @@ linux*|mac*{
 	QMAKE_CFLAGS += -pedantic-errors
 	QMAKE_CXXFLAGS_WARN_ON = -Wall -Wno-c++11-extensions -Wno-local-type-template-args -Wno-deprecated-register
 
-	CONFIG(release, debug|release):CONFIG += Release
-	CONFIG(debug, debug|release):CONFIG += Debug
-
 	Release:DEFINES += NDEBUG=1
 	Debug:DEFINES += _DEBUG
 }
