@@ -25,7 +25,8 @@ const std::vector<CMyHtmlParser::HtmlTag>& CMyHtmlParser::parse(const QByteArray
 	myhtml_tree_init(_tree, _myhtmlInstance);
 	myhtml_callback_tree_node_insert_set(_tree, &CMyHtmlParser::callbackNodeInserted, this);
 
-	myhtml_parse(_tree, MyHTML_ENCODING_UTF_8, html.data(), html.size());
+	// TODO: auto-detect encoding
+	myhtml_parse(_tree, MyENCODING_UTF_8, html.data(), html.size());
 
 	myhtml_tree_destroy(_tree);
 
@@ -40,7 +41,7 @@ void CMyHtmlParser::callbackNodeInserted(myhtml_tree_t* /*tree*/, myhtml_tree_no
 	if (text)
 		tag.text = QString::fromUtf8(text);
 
-	
+
 	for (myhtml_tree_attr_t *attr = myhtml_node_attribute_first(node); attr != nullptr; attr = myhtml_attribute_next(attr))
 	{
 		HtmlTagAttribute attribute;
