@@ -8,6 +8,7 @@ DISABLE_COMPILER_WARNINGS
 RESTORE_COMPILER_WARNINGS
 
 #include <algorithm>
+#include <map>
 #include <vector>
 
 class CMyHtmlParser
@@ -49,7 +50,10 @@ private:
 	}
 
 private:
+	std::map<QString, myencoding_list> _knownEncodings;
+
 	std::vector<HtmlTag> _tags;
+	QString _encoding;
 
 	myhtml_t* _myhtmlInstance = nullptr;
 	myhtml_tree_t* _tree = nullptr;
