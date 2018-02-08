@@ -1,21 +1,10 @@
 #include "cmyhtmlparser.h"
 #include "assert/advanced_assert.h"
 
-#include <assert.h>
-
-CMyHtmlParser::CMyHtmlParser(size_t workerThreadCount)
+CMyHtmlParser::CMyHtmlParser()
 {
 	_myhtmlInstance = myhtml_create();
-	if (workerThreadCount == 0)
-		myhtml_init(_myhtmlInstance, MyHTML_OPTIONS_PARSE_MODE_SINGLE, 1, 0);
-	else
-		myhtml_init(_myhtmlInstance, MyHTML_OPTIONS_DEFAULT, workerThreadCount, 0);
-
-	_knownEncodings = {
-		{ "utf-8", MyENCODING_UTF_8 },
-		{ "windows-1250", MyENCODING_WINDOWS_1250 },
-		{ "windows-1251", MyENCODING_WINDOWS_1251 }
-	};
+	myhtml_init(_myhtmlInstance, MyHTML_OPTIONS_PARSE_MODE_SINGLE, 1, 0);
 }
 
 CMyHtmlParser::~CMyHtmlParser()
@@ -27,33 +16,40 @@ CMyHtmlParser::~CMyHtmlParser()
 const std::vector<CMyHtmlParser::HtmlTag>& CMyHtmlParser::parse(const QByteArray& html)
 {
 	_tags.clear();
-	_encoding.clear();
 
 	_tree = myhtml_tree_create();
 	assert_r(_tree);
 	assert_r(myhtml_tree_init(_tree, _myhtmlInstance) == MyCORE_STATUS_OK);
 	myhtml_callback_tree_node_insert_set(_tree, &CMyHtmlParser::callbackNodeInserted, this);
 
-	assert_r(myhtml_parse(_tree, MyENCODING_UTF_8, html.data(), html.size()) == MyCORE_STATUS_OK);
-
-	const auto actualEncoding = _knownEncodings.find(_encoding);
-	if (actualEncoding != _knownEncodings.end() && actualEncoding->second != MyENCODING_UTF_8)
+	/*
+	* From Specification:
+	*
+	* The authoring conformance requirements for character encoding declarations limit them to only
+	* appearing in the first 1024 bytes. User agents are therefore encouraged to use the prescan
+	* algorithm below (as invoked by these steps) on the first 1024 bytes, but not to stall beyond that.
+	*/
+	_encoding = myencoding_prescan_stream_to_determine_encoding(html.data(), std::min(html.size(), 1024));
+	if (_encoding == MyENCODING_NOT_DETERMINED)
 	{
-		// Non-UTF-8 encoding detected, restarting parse
-		_tags.clear();
-		myhtml_tree_destroy(_tree);
-		_tree = myhtml_tree_create();
-		assert_r(_tree);
-		assert_r(myhtml_tree_init(_tree, _myhtmlInstance) == MyCORE_STATUS_OK);
-		myhtml_callback_tree_node_insert_set(_tree, &CMyHtmlParser::callbackNodeInserted, this);
-
-		// Restarting parse with the correct encoding
-		assert_r(myhtml_parse(_tree, actualEncoding->second, html.data(), html.size()) == MyCORE_STATUS_OK);
+		assert_unconditional_r("Failed to determine data encoding");
+		_encoding = MyENCODING_UTF_8;
 	}
 
+	assert_r(myhtml_parse(_tree, _encoding, html.data(), html.size()) == MyCORE_STATUS_OK);
 	myhtml_tree_destroy(_tree);
 
 	return _tags;
+}
+
+const std::vector<CMyHtmlParser::HtmlTag>& CMyHtmlParser::result() const
+{
+	return _tags;
+}
+
+QString CMyHtmlParser::documentEncodingName() const
+{
+	return myencoding_name_by_id(_encoding, nullptr);
 }
 
 void CMyHtmlParser::callbackNodeInserted(myhtml_tree_t* /*tree*/, myhtml_tree_node_t* node)
@@ -78,9 +74,6 @@ void CMyHtmlParser::callbackNodeInserted(myhtml_tree_t* /*tree*/, myhtml_tree_no
 
 		assert(name || value);
 		tag.attributes.push_back(attribute);
-
-		if (tag.type == MyHTML_TAG_META && attribute.name == QLatin1String("charset"))
-			_encoding = attribute.value.toLower();
 	}
 
 	_tags.push_back(tag);

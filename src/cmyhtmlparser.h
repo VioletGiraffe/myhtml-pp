@@ -8,7 +8,6 @@ DISABLE_COMPILER_WARNINGS
 RESTORE_COMPILER_WARNINGS
 
 #include <algorithm>
-#include <map>
 #include <vector>
 
 class CMyHtmlParser
@@ -35,13 +34,14 @@ public:
 
 
 	// 0 means no worker threads
-	explicit CMyHtmlParser(size_t workerThreadCount = 0);
+	CMyHtmlParser();
 	~CMyHtmlParser();
 
 	const std::vector<HtmlTag>& parse(const QByteArray& html);
-	inline const std::vector<HtmlTag>& result() const {
-		return _tags;
-	}
+
+	const std::vector<HtmlTag>& result() const;
+
+	QString documentEncodingName() const;
 
 private:
 	void callbackNodeInserted(myhtml_tree_t* tree, myhtml_tree_node_t* node);
@@ -50,10 +50,8 @@ private:
 	}
 
 private:
-	std::map<QString, myencoding_list> _knownEncodings;
-
 	std::vector<HtmlTag> _tags;
-	QString _encoding;
+	myencoding_list _encoding = MyENCODING_NOT_DETERMINED;
 
 	myhtml_t* _myhtmlInstance = nullptr;
 	myhtml_tree_t* _tree = nullptr;
